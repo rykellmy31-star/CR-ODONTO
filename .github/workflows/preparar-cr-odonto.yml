@@ -1,0 +1,103 @@
+name: Preparar codigo CR ODONTO a partir do ZIP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/preparar-cr-odonto.yml'
+      - 'crodonto-completo.zip'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extrair:
+    name: Extrair codigo e criar branch de preparacao
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Validar ZIP e extrair arquivos com seguranca
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import zipfile, pathlib, sys, os, stat
+          zip_path = pathlib.Path("crodonto-completo.zip")
+          if not zip_path.is_file():
+              sys.exit("ERRO: ZIP crodonto-completo.zip nao encontrado.")
+          target = pathlib.Path("_cr_odonto_extraido")
+          target.mkdir(exist_ok=True)
+          bad_names = []
+          total = 0
+          with zipfile.ZipFile(zip_path) as z:
+              files = [i for i in z.infolist() if not i.is_dir()]
+              if not files or len(files) > 20000:
+                  sys.exit("ERRO: arquivo vazio ou quantidade excessiva de arquivos.")
+              roots = {i.filename.split("/")[0] for i in files if "/" in i.filename}
+              # Remove apenas um diretorio comum a todos os arquivos.
+              prefix = next(iter(roots)) + "/" if len(roots) == 1 and all(i.filename.startswith(next(iter(roots)) + "/") for i in files) else ""
+              for i in files:
+                  total += i.file_size
+                  if total > 250 * 1024 * 1024:
+                      sys.exit("ERRO: conteudo descompactado excede 250 MB.")
+                  name = i.filename[len(prefix):]
+                  p = pathlib.PurePosixPath(name)
+                  parts = p.parts
+                  if (not name or name.startswith("/") or "\\" in name or
+                      ".." in parts or ".git" in parts or
+                      (len(parts)>1 and parts[0]==".github" and parts[1]=="workflows") or
+                      any(v in parts for v in ("node_modules", ".wrangler", "__MACOSX", ".next", ".turbo")) or
+                      p.name in (".DS_Store", ".dev.vars") or
+                      (p.name.startswith(".env") and p.name not in (".env.example", ".env.sample", ".env.template")) or
+                      p.suffix.lower() in (".pem", ".key", ".p12", ".pfx")):
+                      bad_names.append(name)
+                      continue
+                  mode = i.external_attr >> 16
+                  if stat.S_ISLNK(mode):
+                      bad_names.append(name + " (symlink)")
+                      continue
+                  out = target.joinpath(*parts)
+                  out.parent.mkdir(parents=True, exist_ok=True)
+                  with z.open(i) as src, out.open("wb") as dest:
+                      import shutil
+                      shutil.copyfileobj(src, dest)
+          print(f"ZIP analisado: {len(files)} arquivos, {total} bytes descompactados.")
+          print(f"Diretorio de origem removido: {prefix!r}")
+          print(f"Ignorados por seguranca: {len(bad_names)}")
+          for name in bad_names[:30]:
+              print("  IGNORADO:", name)
+          print("Manifestos:")
+          for file in target.rglob("*"):
+              if file.is_file() and file.name in ("package.json","wrangler.toml","wrangler.jsonc","wrangler.json","vite.config.ts","README.md","pnpm-workspace.yaml"):
+                  print(" ", file.relative_to(target))
+          PY
+
+      - name: Criar branch de preparacao e adicionar codigo extraido
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          branch="preparacao/cloudflare-cr-odonto"
+          git fetch origin "$branch" || true
+          if git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+            echo "Branch de preparacao ja existe. Nao sobrescrever automaticamente." >&2
+            exit 1
+          fi
+          git checkout -b "$branch"
+          cp -a _cr_odonto_extraido/. ./
+          rm -rf _cr_odonto_extraido
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteracao apos extracao; confira conteudo do ZIP."
+            exit 1
+          fi
+          git commit -m "Extrair codigo CR ODONTO do pacote Arena para preparar Cloudflare"
+          git push -u origin "$branch"
+          echo "Branch preparada: $branch"
