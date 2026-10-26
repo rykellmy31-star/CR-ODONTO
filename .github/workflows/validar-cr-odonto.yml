@@ -1,0 +1,41 @@
+name: Validar CR ODONTO antes da Cloudflare
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [preparacao/cloudflare-cr-odonto]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validar:
+    name: Typecheck, unitarios e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Usar Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Instalar dependencias
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
+      - name: Checar tipos
+        run: npm run check:types
+      - name: Testes unitarios
+        run: npm test
+      - name: Compilar frontend de producao
+        run: npm run build
+      - name: Verificar artefatos e configuracoes
+        shell: bash
+        run: |
+          test -f wrangler.jsonc
+          test -f api/index.ts
+          test -d migrations
+          test -f docs/DEPLOY.md
+          test -f dist/index.html
+          echo "Codigo compila. Deploy Cloudflare ainda depende dos IDs D1/R2 e secrets."
