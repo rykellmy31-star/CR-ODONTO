@@ -1,0 +1,65 @@
+name: Homologacao local API CR ODONTO
+
+on:
+  push:
+    branches: [main, preparacao/cloudflare-cr-odonto]
+    paths:
+      - '.github/workflows/testar-api-local-cr-odonto.yml'
+      - 'api/**'
+      - 'migrations/**'
+      - 'scripts/**'
+      - 'package*.json'
+      - 'wrangler.jsonc'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Migrations D1 local, Worker real e smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Instalar dependencias
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
+      - name: Gerar segredos locais apenas para teste
+        shell: bash
+        run: |
+          {
+            echo "SESSION_SECRET=$(openssl rand -hex 32)"
+            echo "MSG_ENC_KEY=$(openssl rand -hex 32)"
+            echo "SETUP_TOKEN=dev-setup-token-1234567890"
+            echo "APP_ENV=development"
+            echo "PUBLIC_URL=http://127.0.0.1:8787"
+            echo "WHATSAPP_MOCK=1"
+          } > .dev.vars
+          chmod 600 .dev.vars
+      - name: Aplicar migrations no D1 local
+        run: npm run db:migrate:local
+      - name: Subir Worker real com banco local
+        shell: bash
+        run: |
+          npx wrangler dev --local --port 8787 > /tmp/crodonto-worker.log 2>&1 &
+          echo $! > /tmp/crodonto-worker.pid
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8787/api/health > /tmp/crodonto-health.json; then
+              cat /tmp/crodonto-health.json
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/crodonto-worker.log
+          exit 1
+      - name: Executar smoke integrado contra Worker
+        run: npm run smoke
+      - name: Diagnostico em caso de falha
+        if: failure()
+        run: tail -n 120 /tmp/crodonto-worker.log || true
