@@ -2,7 +2,7 @@ name: Homologacao local API CR ODONTO
 
 on:
   push:
-    branches: [main, preparacao/cloudflare-cr-odonto]
+    branches: [main, preparacao/cloudflare-cr-odonto, homologacao-cr-odonto]
     paths:
       - '.github/workflows/testar-api-local-cr-odonto.yml'
       - 'api/**'
