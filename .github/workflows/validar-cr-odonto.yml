@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [preparacao/cloudflare-cr-odonto]
+    branches: [preparacao/cloudflare-cr-odonto, homologacao-cr-odonto]
   workflow_dispatch:
 
 permissions:
