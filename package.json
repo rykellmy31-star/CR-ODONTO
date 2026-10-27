@@ -1,0 +1,50 @@
+{
+  "name": "cr-odonto",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CR ODONTO — SaaS multiempresa para consultorios e clinicas odontologicas (Cloudflare Workers + D1 + R2).",
+  "type": "module",
+  "engines": { "node": ">=20.19" },
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c yellow,cyan \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "wrangler dev --port 8787 --ip 0.0.0.0",
+    "dev:web": "vite --port 5173 --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "check:types": "tsc -b --pretty false",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:migrate:local": "wrangler d1 migrations apply crodonto-db --local",
+    "db:seed:local": "node scripts/seed-local.mjs",
+    "db:reset:local": "node scripts/reset-local-db.mjs",
+    "db:migrate:remote": "node scripts/production-preflight.mjs && wrangler d1 migrations apply crodonto-db --remote",
+    "setup:super": "node scripts/create-super.mjs",
+    "deploy": "node scripts/production-preflight.mjs && npm run build && wrangler deploy",
+    "cf-typegen": "wrangler types",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "hono": "^4.6.14",
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.18.4",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250109.0",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22.20.5",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "~4.3.4",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.5",
+    "vitest": "^2.1.8",
+    "wrangler": "^4.151.2"
+  }
+}

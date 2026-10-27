@@ -1,0 +1,14 @@
+# Copie para .dev.vars (NUNCA comite este arquivo) e preencha.
+# Gere segredos fortes: openssl rand -hex 32
+SESSION_SECRET=troque-por-32-bytes-aleatorios-em-hex
+# Chave AES-256-GCM para cifrar tokens do WhatsApp em repouso (>=32 chars)
+MSG_ENC_KEY=troque-por-32-bytes-aleatorios-em-hex
+APP_ENV=development
+PUBLIC_URL=http://localhost:8787
+GRAPH_API_VERSION=v23.0
+
+# WhatsApp Cloud API (por consultório as credenciais ficam no D1, cifradas).
+# Estes valores são da PLATAFORMA (webhook + validação de assinatura).
+WHATSAPP_WEBHOOK_VERIFY_TOKEN=troque-por-um-token-aleatorio
+WHATSAPP_APP_SECRET=
+WHATSAPP_MOCK=1
