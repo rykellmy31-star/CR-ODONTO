@@ -30,6 +30,9 @@ jobs:
         run: npm test
       - name: Compilar frontend de producao
         run: npm run build
+      - name: Validar isolamento do Worker e banco de homologacao
+        if: github.ref == 'refs/heads/homologacao-cr-odonto'
+        run: node scripts/staging-preflight.mjs
       - name: Verificar artefatos e configuracoes
         shell: bash
         run: |
