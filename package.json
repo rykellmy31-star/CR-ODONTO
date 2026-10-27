@@ -4,7 +4,9 @@
   "private": true,
   "description": "CR ODONTO — SaaS multiempresa para consultorios e clinicas odontologicas (Cloudflare Workers + D1 + R2).",
   "type": "module",
-  "engines": { "node": ">=20.19" },
+  "engines": {
+    "node": ">=20.19"
+  },
   "scripts": {
     "dev": "concurrently -k -n api,web -c yellow,cyan \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "wrangler dev --port 8787 --ip 0.0.0.0",
@@ -13,14 +15,15 @@
     "check:types": "tsc -b --pretty false",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:migrate:local": "wrangler d1 migrations apply crodonto-db --local",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
     "db:seed:local": "node scripts/seed-local.mjs",
     "db:reset:local": "node scripts/reset-local-db.mjs",
-    "db:migrate:remote": "node scripts/production-preflight.mjs && wrangler d1 migrations apply crodonto-db --remote",
+    "db:migrate:remote": "node scripts/production-preflight.mjs && wrangler d1 migrations apply DB --remote",
     "setup:super": "node scripts/create-super.mjs",
     "deploy": "node scripts/production-preflight.mjs && npm run build && wrangler deploy",
     "cf-typegen": "wrangler types",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "deploy:staging": "node scripts/staging-preflight.mjs && npm run build && wrangler d1 migrations apply DB --remote && wrangler deploy"
   },
   "dependencies": {
     "clsx": "^2.1.1",
