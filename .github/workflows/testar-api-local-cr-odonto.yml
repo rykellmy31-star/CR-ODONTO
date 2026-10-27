@@ -44,6 +44,8 @@ jobs:
           chmod 600 .dev.vars
       - name: Aplicar migrations no D1 local
         run: npm run db:migrate:local
+      - name: Compilar assets exigidos pelo Wrangler 
+        run: npm run build
       - name: Subir Worker real com banco local
         shell: bash
         run: |
