@@ -1,28 +1,43 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "crodonto",
+  "name": "crodonto-staging",
   "main": "api/index.ts",
   "compatibility_date": "2025-01-01",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "vars": {
-    "APP_ENV": "development",
-    "GRAPH_API_VERSION": "v23.0"
+    "APP_ENV": "staging",
+    "GRAPH_API_VERSION": "v23.0",
+    "CR_ODONTO_STAGING": "1"
   },
-  "observability": { "enabled": true },
+  "observability": {
+    "enabled": true
+  },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*", "/uploads/*"]
+    "run_worker_first": [
+      "/api/*",
+      "/uploads/*"
+    ]
   },
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "crodonto-db",
-      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
+      "database_name": "crodonto-staging-db",
+      "database_id": "cc562d69-dd29-4646-8bd2-0df6f26d9907",
       "migrations_dir": "migrations"
     }
   ],
-  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "crodonto-media" }],
-  "triggers": { "crons": ["*/5 * * * *"] }
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "crodonto-staging-media"
+    }
+  ],
+  "triggers": {
+    "crons": []
+  }
 }
