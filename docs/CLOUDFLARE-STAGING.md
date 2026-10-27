@@ -4,7 +4,7 @@
 
 - Repositório: `rykellmy31-star/CR-ODONTO`
 - **Branch Cloudflare Builds**: `homologacao-cr-odonto` (NÃO selecionar `main`)
-- **Worker**: `crodonto-staging`
+- **Worker**: `cr-odonto`
 - **D1**: `crodonto-staging-db`
 - **D1 ID**: `cc562d69-dd29-4646-8bd2-0df6f26d9907`
 - **R2**: `crodonto-staging-media` — CRIAR este bucket antes do deploy.
@@ -16,7 +16,7 @@ A branch `main` preserva sua configuracao separada e NAO deve ser conectada ao W
 
 1. Verifique no painel Cloudflare se o D1 e R2 acima existem, na MESMA conta.
 2. Workers & Pages → Create application → GitHub → selecione `rykellmy31-star/CR-ODONTO`.
-3. Em branch selecione **`homologacao-cr-odonto`**; Worker `crodonto-staging`; root `/`.
+3. Em branch selecione **`homologacao-cr-odonto`**; Worker `cr-odonto`; root `/`.
 4. Build command:
 
 ```sh
@@ -39,7 +39,7 @@ Para evitar falha na instalacao automatica por peer dependencies, configure a bu
 
 ## Segredos de runtime (somente apos criar o Worker)
 
-Em `Workers & Pages → crodonto-staging → Settings → Variables and Secrets`, tipo Secret:
+Em `Workers & Pages → cr-odonto → Settings → Variables and Secrets`, tipo Secret:
 
 - `SESSION_SECRET` — pelo menos 32 caracteres aleatorios.
 - `MSG_ENC_KEY` — chave independente da anterior, pelo menos 32 caracteres aleatorios.
@@ -75,7 +75,7 @@ Os comandos devem ser executados apos autenticar o Wrangler na conta Cloudflare 
 
 ## Nunca fazer
 
-- Nao selecionar `main` no Worker `crodonto-staging`.
+- Nao selecionar `main` no Worker `cr-odonto`.
 - Nao configurar o D1 ou R2 do TIGU.
 - Nao usar dados reais de pacientes em homologacao.
 - Nao ativar disparos reais de WhatsApp no staging.
