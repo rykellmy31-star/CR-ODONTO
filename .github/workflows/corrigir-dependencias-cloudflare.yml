@@ -1,0 +1,60 @@
+name: Corrigir dependencias npm CR ODONTO para Cloudflare
+
+on:
+  push:
+    branches: [homologacao-cr-odonto]
+    paths:
+      - '.github/workflows/corrigir-dependencias-cloudflare.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  compatibilizar:
+    name: Regerar lock e validar npm sem legacy-peer-deps
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Obter codigo isolado de homologacao
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+      - name: Configurar Node como no Cloudflare
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Alinhar dependencias conflitantes
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("package.json")
+          data=json.loads(p.read_text(encoding="utf-8"))
+          data["devDependencies"]["@cloudflare/workers-types"]="^5.20261026.1"
+          data["devDependencies"]["vitest"]="^3.2.7"
+          p.write_text(json.dumps(data,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+          Path(".npmrc").unlink(missing_ok=True)
+          PY
+      - name: Regerar lock com resolucao completa de pares
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Reproduzir instalacao automatica da Cloudflare
+        run: npm clean-install --progress=false --no-audit --no-fund
+      - name: Checar tipos, unitarios e build
+        run: |
+          npm run check:types
+          npm test
+          npm run build
+      - name: Salvar atualizacao somente se passou tudo
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json .npmrc
+          if git diff --cached --quiet; then
+            echo "Nenhuma mudanca a salvar."
+          else
+            git commit -m "Corrigir pares npm do Vitest e Wrangler para Cloudflare"
+            git push origin HEAD:homologacao-cr-odonto
+          fi
