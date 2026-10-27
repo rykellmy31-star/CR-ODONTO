@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 
 const config = JSON.parse(readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8"));
 const errors = [];
-if (config.name !== "crodonto-staging") errors.push("Worker incorreto: esperado crodonto-staging");
+if (config.name !== "cr-odonto") errors.push("Worker incorreto: esperado cr-odonto");
 if (config.vars?.APP_ENV !== "staging" || config.vars?.CR_ODONTO_STAGING !== "1")
   errors.push("APP_ENV e CR_ODONTO_STAGING precisam indicar homologacao");
 const db = config.d1_databases?.find((item) => item.binding === "DB");
