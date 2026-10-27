@@ -23,7 +23,7 @@ jobs:
           node-version: '22'
           cache: npm
       - name: Instalar dependencias
-        run: npm ci --legacy-peer-deps --no-audit --no-fund
+        run: npm clean-install --no-audit --no-fund
       - name: Checar tipos
         run: npm run check:types
       - name: Testes unitarios
